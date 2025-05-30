@@ -1,72 +1,87 @@
-import { jwtDecode } from 'jwt-decode';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
+import { FcGoogle } from "react-icons/fc";
 
-import React from 'react'
-import { GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
-import {FcGoogle} from 'react-icons/fc';
-import shareVideo from '../assets/share.mp4';
-import logo from '../assets/logowhite.png';
-import { client } from '../client';
+import shareVideo from "../assets/share.mp4";
+import logo from "../assets/ShareaPic2.png";
+import { client } from "../client";
+
 const Login = () => {
   const navigate = useNavigate();
-  const responseGoogle = (response) => {
-    const decoded = jwtDecode(response.credential);
-    console.log("Decoded JWT:", decoded);
 
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Fetch user info from Google using the access_token
+        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        });
 
-  localStorage.setItem('user', JSON.stringify(decoded));
-  const { name: userName, sub: googleId, picture: imageUrl } = decoded;
+        const decoded = await res.json();
 
+        if (!decoded?.sub) {
+          console.error("Google user info missing 'sub'");
+          return;
+        }
 
-  const doc = {
-    _id: googleId,
-    _type: 'user',
-    userName: userName,
-    image: imageUrl,
-  };
+        console.log("Decoded user info:", decoded);
+        localStorage.setItem("user", JSON.stringify(decoded));
 
-  client.createIfNotExists(doc).then(() => {
-    navigate('/', { replace: true });
+        const { name: userName, sub: googleId, picture: imageUrl } = decoded;
+
+        const doc = {
+          _id: googleId,
+          _type: "user",
+          userName,
+          image: imageUrl,
+        };
+
+        client.createIfNotExists(doc).then(() => {
+          navigate("/", { replace: true });
+        });
+      } catch (err) {
+        console.error("Error fetching user info:", err);
+      }
+    },
+    onError: () => {
+      console.error("Login Failed");
+    },
+    scope: "profile email",
   });
-};
+
   return (
-    <div className='flex justify-start items-center flex-col h-screen'>
+    <div className="flex justify-start items-center flex-col h-screen">
       <div className="relative w-full h-full">
         <video
           src={shareVideo}
-          type = 'video/mp4'
+          type="video/mp4"
           loop
-          controls = {false}  
+          controls={false}
           muted
           autoPlay
-          className='w-full h-full object-cover'
+          className="w-full h-full object-cover"
         />
         <div className="absolute flex flex-col justify-center items-center top-0 right-0 left-0 bottom-0 bg-blackOverlay">
           <div className="p-5">
-            <img src={logo} width = "130px" alt= "logo"/>
+            <img src={logo} width="130px" alt="logo" />
           </div>
           <div className="shadow-2xl">
-            <GoogleLogin
-              clientId = {process.env.REACT_APP_GOOGLE_API_TOKEN}            
-              render = {(renderProps)=>(
-                <button 
-                type='button'
-                className='bg-mainColor flex justfy-center items-center p-3 rounded-lg cursor-pointer outline-none'
-                onClick={renderProps.onClick}
-                disabled = {renderProps.disabled}
-                >
-                  <FcGoogle className = "mr-4"/>Sign in with Google
-                </button>
-              )}
-              onSuccess={responseGoogle}
-              onFailure={responseGoogle}
-              cookiePolicy = "single_host_origin"
-            />
+            <button
+              type="button"
+              onClick={() => login()}
+              className="bg-mainColor flex justify-center items-center p-3 rounded-lg cursor-pointer outline-none"
+            >
+              <FcGoogle className="mr-4" />
+              Sign in with Google
+            </button>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
