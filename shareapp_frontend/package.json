@@ -19,7 +19,7 @@
     "react-loader-spinner": "^6.1.6",
     "react-masonry-css": "^1.0.16",
     "react-router-dom": "^7.5.1",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "shareapp_frontend": "file:",
     "uuid": "^11.1.0",
     "web-vitals": "^2.1.4"
