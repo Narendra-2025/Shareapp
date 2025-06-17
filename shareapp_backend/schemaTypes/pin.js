@@ -1,27 +1,27 @@
-export default{
+export default {
     name: 'pin',
-    title: 'pin',
+    title: 'Pin',
     type: 'document',
     fields: [
         {
             name: 'title',
             title: 'Title',
-            type: 'string',
+            type: 'string'
         },
         {
             name: 'about',
             title: 'About',
-            type: 'string',
+            type: 'string'
         },
         {
             name: 'destination',
             title: 'Destination',
-            type: 'url',
+            type: 'url'
         },
         {
             name: 'category',
             title: 'Category',
-            type: 'string',
+            type: 'string'
         },
         {
             name: 'image',
@@ -33,25 +33,43 @@ export default{
         },
         {
             name: 'userId',
-            title: 'UserId',
-            type: 'string',
+            title: 'User ID',
+            type: 'string'
         },
         {
             name: 'postedBy',
-            title: 'PostedBy',
-            type: 'postedBy',
+            title: 'Posted By',
+            type: 'reference',
+            to: [{ type: 'user' }]
         },
         {
             name: 'save',
             title: 'Save',
             type: 'array',
-            of: [{type: 'save'}]
+            of: [
+                {
+                    type: 'object',
+                    fields: [
+                        {
+                            name: 'postedBy',
+                            title: 'Posted By',
+                            type: 'reference',
+                            to: [{ type: 'user' }]
+                        },
+                        {
+                            name: 'userId',
+                            title: 'User ID',
+                            type: 'string'
+                        }
+                    ]
+                }
+            ]
         },
         {
             name: 'comments',
             title: 'Comments',
             type: 'array',
-            of: [{type: 'comment'}]
-        },
+            of: [{ type: 'comment' }]
+        }
     ]
 }

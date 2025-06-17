@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { HiMenu } from "react-icons/hi";
 import { AiFillCloseCircle } from "react-icons/ai";
-import { data, Link, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes } from "react-router-dom";
+
 import Sidebar from "../Component/Sidebar";
 import UserProfile from "../Component/UserProfile";
 import { client } from "../client";
@@ -15,7 +16,7 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const scrollRef = useRef(null);
   const userInfo = fetchUser();
-  
+
   useEffect(() => {
     if (userInfo?.sub) {
       const query = userQuery(userInfo.sub);
@@ -36,7 +37,7 @@ const Home = () => {
     <div className="flex bg-gray-50 h-screen transition-height duration-75 ease-out">
       {/* Sidebar (desktop) */}
       <div className="hidden md:flex h-screen">
-        <Sidebar user={user && user} />
+        <Sidebar user={user} />
       </div>
 
       {/* Sidebar (mobile) */}
@@ -51,7 +52,7 @@ const Home = () => {
             <img src={logo} alt="logo" className="w-28" />
           </Link>
           <Link to={`user-profile/${user?._id}`}>
-            <img src={user?.image} alt="logo" className="w-28" />
+            <img src={user?.image} alt={user?.userName} className="w-28 rounded-full" />
           </Link>
         </div>
         {toggleSidebar && (
@@ -63,7 +64,7 @@ const Home = () => {
                 onClick={() => setToggleSidebar(false)}
               />
             </div>
-            <Sidebar user={user && user} closeToggle={setToggleSidebar} />
+            <Sidebar user={user} closeToggle={setToggleSidebar} />
           </div>
         )}
       </div>
@@ -72,7 +73,7 @@ const Home = () => {
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <Routes>
           <Route path="user-profile/:userId" element={<UserProfile />} />
-          <Route path="/*" element={<Pins user={user && user} />} />
+          <Route path="/*" element={<Pins user={user} />} />
         </Routes>
       </div>
     </div>

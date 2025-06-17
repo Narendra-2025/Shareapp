@@ -1,17 +1,18 @@
-export default{
-    name: 'save',
-    title: 'Save',
-    type: 'document',
-    fields: [
-        {
-            name: 'postedBy',
-            title: 'PostedBy',
-            type: 'postedBy'
-        },
-        {
-            name: 'userId',
-            title: 'UserId',
-            type: 'string'
-        },
-    ]
-}
+export default {
+  name: 'save',
+  title: 'Save',
+  type: 'document',
+  fields: [
+    {
+      name: 'userId',
+      title: 'UserId',
+      type: 'string',
+    },
+    {
+      name: 'postedBy',
+      title: 'PostedBy',
+      type: 'reference',
+      to: [{ type: 'user' }],
+    },
+  ],
+};

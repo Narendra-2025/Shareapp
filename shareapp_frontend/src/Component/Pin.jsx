@@ -14,8 +14,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
   const user = fetchUser();
 
   const alreadySaved = !!save?.filter(
-    (item) =>
-      item?.postedBy?._id === user.googleId || item?.userId === user.googleId
+    (item) => item?.postedBy?._id === user._id || item?.userId === user._id
   )?.length;
 
   const savePin = (id) => {
@@ -27,10 +26,10 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
         .insert("after", "save[-1]", [
           {
             _key: uuidv4(),
-            userId: user.googleId,
+            userId: user._id,
             postedBy: {
-              _type: "postedBy", // Changed from "reference"
-              _ref: user.googleId,
+              _type: "reference", // ✅ Correct type
+              _ref: user._id, // ✅ Use Sanity document ID
             },
           },
         ])
@@ -45,6 +44,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
         });
     }
   };
+
   const deletePin = (id) => {
     client.delete(id).then(() => {
       window.location.reload();
@@ -116,8 +116,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
                     : destination}
                 </a>
               )}
-              {(postedBy?._id === user.googleId ||
-                postedBy?._ref === user.googleId) && (
+              {(postedBy?._id === user._id || postedBy?._ref === user._id) && (
                 <button
                   type="button"
                   onClick={(e) => {

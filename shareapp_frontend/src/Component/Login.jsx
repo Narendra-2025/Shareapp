@@ -10,14 +10,13 @@ import { client } from "../client";
 const Login = () => {
   const navigate = useNavigate();
 
+  // Google Login Handler
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        // Fetch user info from Google using the access_token
+        // Fetch user info using the access token
         const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: {
-            Authorization: `Bearer ${tokenResponse.access_token}`,
-          },
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
 
         const decoded = await res.json();
@@ -28,10 +27,13 @@ const Login = () => {
         }
 
         console.log("Decoded user info:", decoded);
+
+        // Save user info to local storage
         localStorage.setItem("user", JSON.stringify(decoded));
 
         const { name: userName, sub: googleId, picture: imageUrl } = decoded;
 
+        // Prepare user document for backend
         const doc = {
           _id: googleId,
           _type: "user",
@@ -39,6 +41,7 @@ const Login = () => {
           image: imageUrl,
         };
 
+        // Create user in backend if not already exists
         client.createIfNotExists(doc).then(() => {
           navigate("/", { replace: true });
         });
@@ -71,7 +74,7 @@ const Login = () => {
           <div className="shadow-2xl">
             <button
               type="button"
-              onClick={() => login()}
+              onClick={login}
               className="bg-mainColor flex justify-center items-center p-3 rounded-lg cursor-pointer outline-none"
             >
               <FcGoogle className="mr-4" />

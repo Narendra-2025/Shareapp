@@ -5,8 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { client } from "../client";
 import Spinner from "./Spinner";
 import { categories } from "../utils/data";
-import { urlFor } from '../utils/urlFor'; // adjust path as necessary
-
+import { urlFor } from "../utils/urlFor"; // adjust path as necessary
 
 const CreatePin = ({ user }) => {
   const [title, setTitle] = useState("");
@@ -25,7 +24,13 @@ const CreatePin = ({ user }) => {
     if (!file) return;
 
     const { type, name, size } = file;
-    const allowedTypes = ["image/png", "image/svg+xml", "image/jpeg", "image/gif", "image/tiff"];
+    const allowedTypes = [
+      "image/png",
+      "image/svg+xml",
+      "image/jpeg",
+      "image/gif",
+      "image/tiff",
+    ];
 
     if (!allowedTypes.includes(type)) {
       setWrongImageType(true);
@@ -70,8 +75,8 @@ const CreatePin = ({ user }) => {
         },
         userId: user._id,
         postedBy: {
-          _type: "postedBy",
-          _ref: user._id,
+          _type: "reference", // Fixed here
+          _ref: user._id, // Fixed here
         },
         category,
       };
