@@ -4,15 +4,24 @@ export default {
   type: 'document',
   fields: [
     {
-      name: 'userId',
-      title: 'UserId',
-      type: 'string',
-    },
-    {
       name: 'postedBy',
       title: 'PostedBy',
       type: 'reference',
-      to: [{ type: 'user' }],
+      to: [{type: 'user'}],
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'userId',
+      title: 'UserId',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'pin',
+      title: 'Pin',
+      type: 'reference',
+      to: [{type: 'pin'}],
+      validation: (Rule) => Rule.required(),
     },
   ],
-};
+}

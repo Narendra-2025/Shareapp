@@ -2,8 +2,7 @@
 
 // Query to fetch a specific user
 export const userQuery = (userId) => {
-  const query = `*[_type == "user" && _id == '${userId}']`;
-  return query;
+  return `*[_type == "user" && _id == '${userId}']`;
 };
 
 // Query to search pins based on searchTerm or category
@@ -20,14 +19,14 @@ export const searchQuery = (searchTerm, isCategorySearch = false) => {
         userName,
         image
       },
-      save[] {
+      saves[] {
         _key,
         postedBy -> {
           _id,
           userName,
           image
         }
-      },
+      }
     }`;
   }
 
@@ -40,14 +39,14 @@ export const searchQuery = (searchTerm, isCategorySearch = false) => {
       userName,
       image
     },
-    save[] {
+    saves[] {
       _key,
       postedBy -> {
         _id,
         userName,
         image
       }
-    },
+    }
   }`;
 };
 
@@ -61,19 +60,19 @@ export const feedQuery = `*[_type == 'pin'] | order(_createdAt desc) {
     userName,
     image
   },
-  save[] {
+  saves[] {
     _key,
     postedBy -> {
       _id,
       userName,
       image
     }
-  },
+  }
 }`;
 
 // Query to fetch details of a specific pin
 export const pinDetailQuery = (pinId) => {
-  const query = `*[_type == "pin" && _id == '${pinId}']{
+  return `*[_type == "pin" && _id == '${pinId}']{
     image { asset -> { url } },
     _id,
     title,
@@ -85,7 +84,7 @@ export const pinDetailQuery = (pinId) => {
       userName,
       image
     },
-    save[] {
+    saves[] {
       postedBy -> {
         _id,
         userName,
@@ -102,12 +101,11 @@ export const pinDetailQuery = (pinId) => {
       }
     }
   }`;
-  return query;
 };
 
-// Query to fetch more pins from same category excluding current pin
+// Query to fetch more pins from the same category excluding current pin
 export const pinDetailMorePinQuery = (pin) => {
-  const query = `*[_type == "pin" && category == '${pin.category}' && _id != '${pin._id}']{
+  return `*[_type == "pin" && category == '${pin.category}' && _id != '${pin._id}']{
     image { asset -> { url } },
     _id,
     destination,
@@ -116,16 +114,15 @@ export const pinDetailMorePinQuery = (pin) => {
       userName,
       image
     },
-    save[] {
+    saves[] {
       _key,
       postedBy -> {
         _id,
         userName,
         image
       }
-    },
+    }
   }`;
-  return query;
 };
 
 // Static list of categories
@@ -184,7 +181,7 @@ export const categories = [
 
 // Query to fetch pins created by a specific user
 export const userCreatedPinsQuery = (userId) => {
-  const query = `*[_type == 'pin' && userId == '${userId}'] | order(_createdAt desc) {
+  return `*[_type == 'pin' && postedBy._ref == '${userId}'] | order(_createdAt desc) {
     image { asset -> { url } },
     _id,
     destination,
@@ -193,37 +190,39 @@ export const userCreatedPinsQuery = (userId) => {
       userName,
       image
     },
-    save[] {
+    saves[] {
       _key,
       postedBy -> {
         _id,
         userName,
         image
       }
-    },
+    }
   }`;
-  return query;
 };
 
-// Query to fetch pins saved by a specific user
+// ✅ Query to fetch pins saved by a specific user
 export const userSavedPinsQuery = (userId) => {
-  const query = `*[_type == 'pin' && '${userId}' in save[].userId] | order(_createdAt desc) {
-    image { asset -> { url } },
-    _id,
-    destination,
-    postedBy -> {
+  return `
+    *[_type == "pin" && count(*[_type == "save" && _id in ^.saves[]._ref && userId == "${userId}"]) > 0]
+    | order(_createdAt desc) {
+      image { asset -> { url } },
       _id,
-      userName,
-      image
-    },
-    save[] {
-      _key,
+      destination,
       postedBy -> {
         _id,
         userName,
         image
+      },
+      saves[] -> {
+        _id,
+        userId,
+        postedBy -> {
+          _id,
+          userName,
+          image
+        }
       }
-    },
-  }`;
-  return query;
+    }
+  `;
 };

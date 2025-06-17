@@ -7,41 +7,60 @@ import { BsFillArrowUpRightCircleFill } from "react-icons/bs";
 import { AiTwotoneDelete } from "react-icons/ai";
 import { fetchUser } from "../utils/fetchUser";
 
-const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
+const Pin = ({ pin: { postedBy, image, _id, destination, saves } }) => {
   const [postHovered, setPostHovered] = useState(false);
   const [savingPost, setSavingPost] = useState(false);
   const navigate = useNavigate();
   const user = fetchUser();
 
-  const alreadySaved = !!save?.filter(
-    (item) => item?.postedBy?._id === user._id || item?.userId === user._id
-  )?.length;
+  // Check if current user has saved the pin
+  const alreadySaved = saves?.some((save) => save._ref === user?._id);
 
-  const savePin = (id) => {
-    if (!alreadySaved) {
+  // Get total saves count
+  const totalSaves = saves?.length || 0;
+
+  const savePin = async (id) => {
+    if (!alreadySaved && user) {
       setSavingPost(true);
-      client
-        .patch(id)
-        .setIfMissing({ save: [] })
-        .insert("after", "save[-1]", [
-          {
-            _key: uuidv4(),
-            userId: user._id,
-            postedBy: {
-              _type: "reference", // ✅ Correct type
-              _ref: user._id, // ✅ Use Sanity document ID
-            },
+
+      try {
+        // Create new save document with proper references
+        const saveDoc = {
+          _type: "save",
+          userId: user._id,
+          postedBy: {
+            _type: "reference",
+            _ref: user._id,
           },
-        ])
-        .commit()
-        .then(() => {
-          setSavingPost(false);
-          window.location.reload(); // Refresh to show updated save count
-        })
-        .catch((error) => {
-          console.error("Error saving pin:", error);
-          setSavingPost(false);
-        });
+          pin: {
+            _type: "reference",
+            _ref: id,
+          },
+        };
+
+        // Create the save document
+        await client.create(saveDoc);
+
+        // Update the pin document to include the new save
+        await client
+          .patch(id)
+          .setIfMissing({ saves: [] })
+          .append("saves", [
+            {
+              _key: uuidv4(),
+              _type: "reference",
+              _ref: saveDoc._id, // This should reference the save document, not the user
+            },
+          ])
+          .commit();
+
+        setSavingPost(false);
+        window.location.reload();
+      } catch (error) {
+        console.error("Error saving pin:", error);
+        setSavingPost(false);
+        alert("Failed to save pin. Please try again.");
+      }
     }
   };
 
@@ -56,7 +75,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
       <div
         onMouseEnter={() => setPostHovered(true)}
         onMouseLeave={() => setPostHovered(false)}
-        onClick={() => navigate(`/pin-detail/${_id}`)} // Navigate on image click
+        onClick={() => navigate(`/pin-detail/${_id}`)}
         className="relative cursor-zoom-in w-auto hover:shadow-lg overflow-hidden transition-all duration-500 ease-in-out"
       >
         <img
@@ -74,7 +93,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
                 <a
                   href={`${image?.asset?.url}?dl=`}
                   download
-                  onClick={(e) => e.stopPropagation()} // Prevent parent navigation
+                  onClick={(e) => e.stopPropagation()}
                   className="bg-white w-9 h-9 rounded-full flex items-center justify-center text-dark text-xl opacity-75 hover:opacity-100 hover:shadow-md outline-none"
                 >
                   <MdDownloadForOffline />
@@ -83,22 +102,22 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
               {alreadySaved ? (
                 <button
                   type="button"
-                  onClick={(e) => e.stopPropagation()} // Stop navigation when clicking saved button
+                  onClick={(e) => e.stopPropagation()}
                   className="bg-red-500 opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outline-none"
                 >
-                  {save?.length} saved
+                  {totalSaves} saved
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation(); // Stop parent click (navigation)
+                    e.stopPropagation();
                     savePin(_id);
                   }}
-                  disabled={savingPost} // Disable button while saving
+                  disabled={savingPost}
                   className="bg-red-500 opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outline-none"
                 >
-                  Save
+                  {savingPost ? "Saving..." : "Save"}
                 </button>
               )}
             </div>
@@ -111,12 +130,13 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
                   className="bg-white flex items-center gap-2 text-black font-bold p-2 pl-4 pr-4 rounded-full opacity-70 hover:opacity-100 hover:shadow-md"
                 >
                   <BsFillArrowUpRightCircleFill />
-                  {destination && destination.length > 15
-                    ? destination.substring(0, 15) + "..."
+                  {destination.length > 15
+                    ? `${destination.substring(0, 15)}...`
                     : destination}
                 </a>
               )}
-              {(postedBy?._id === user._id || postedBy?._ref === user._id) && (
+              {(postedBy?._id === user?._id ||
+                postedBy?._ref === user?._id) && (
                 <button
                   type="button"
                   onClick={(e) => {
@@ -133,7 +153,7 @@ const Pin = ({ pin: { postedBy, image, _id, destination, save } }) => {
         )}
       </div>
       <Link
-        to={`user-profile/${postedBy?._id}`}
+        to={`/user-profile/${postedBy?._id}`}
         className="flex gap-2 mt-2 items-center"
       >
         <img
